@@ -1,7 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import { Provider } from 'react-redux';
+import configureStore from './configureStore';
 import { NavigationActions, addNavigationHelpers } from 'react-navigation';
+import { configureBackgroundTrackingService } from './modules/location';
+
+const store = configureStore();
+
+configureBackgroundTrackingService(store);
 
 function getAction(router, path, params) {
   const action = router.getActionForPathAndParams(path, params);
@@ -15,10 +21,13 @@ function getAction(router, path, params) {
 }
 
 export default NavigationAwareView => {
+
+
   const initialAction = getAction(
     NavigationAwareView.router,
     window.location.pathname.substr(1)
   );
+
   const initialState = NavigationAwareView.router.getStateForAction(
     initialAction
   );
@@ -26,6 +35,7 @@ export default NavigationAwareView => {
 
   class NavigationContainer extends React.Component {
     state = initialState;
+
     componentDidMount() {
       const navigation = addNavigationHelpers({
         state: this.state.routes[this.state.index],
@@ -103,12 +113,13 @@ export default NavigationAwareView => {
     };
     render() {
       return (
-        <NavigationAwareView
-          navigation={addNavigationHelpers({
-            state: this.state,
-            dispatch: this.dispatch,
-          })}
-        />
+        <Provider store={ store }>
+          <NavigationAwareView
+              navigation={addNavigationHelpers({
+              state: this.state,
+              dispatch: this.dispatch,
+            })}/>
+        </Provider>
       );
     }
     getURIForAction = action => {
